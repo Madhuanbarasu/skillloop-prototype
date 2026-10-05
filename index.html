@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SkillLoop Prototype</title>
+<style>
+:root{--bg:#f8fafc;--card:#fff;--ink:#0f172a;--mut:#475569;--line:#e2e8f0;--teal:#0d9488;--tealbg:#ccfbf1;--amb:#b45309;--ambbg:#fef3c7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--mut:#94a3b8;--line:#334155;--teal:#2dd4bf;--tealbg:#134e4a;--amb:#fbbf24;--ambbg:#422006}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--mut:#94a3b8;--line:#334155;--teal:#2dd4bf;--tealbg:#134e4a;--amb:#fbbf24;--ambbg:#422006}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:4px 0 2px}
+.sub{color:var(--mut);margin:0 0 12px;font-size:14px}
+.note{background:var(--ambbg);color:var(--amb);border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer}
+.tab.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+:root[data-theme="dark"] .tab.on{color:#0f172a}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--ink);resize:vertical;min-height:70px}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px;cursor:pointer}
+:root[data-theme="dark"] .btn{color:#0f172a}
+.btn.alt{background:transparent;color:var(--teal);border:1px solid var(--teal)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.chip{background:var(--tealbg);color:var(--teal);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600}
+.chip.a{background:var(--ambbg);color:var(--amb)}
+.lab{font-size:12px;color:var(--mut);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.04em}
+.m{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.m:first-of-type{border-top:0}
+.av{width:38px;height:38px;border-radius:50%;background:var(--tealbg);color:var(--teal);display:grid;place-items:center;font-weight:700;flex:none}
+.mi{flex:1;min-width:0}
+.mi b{display:block}.mi span{font-size:12.5px;color:var(--mut)}
+.pct{font-weight:700;color:var(--teal)}
+.bar{height:6px;background:var(--line);border-radius:6px;margin-top:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--teal)}
+ul{margin:6px 0 0;padding-left:18px}li{margin:4px 0}
+.msg{font-size:13px;color:var(--mut);padding:6px 0;border-top:1px solid var(--line)}
+.msg:first-of-type{border-top:0}
+.hide{display:none}
+.try{font-size:12.5px;color:var(--mut)}
+.try button{background:none;border:0;color:var(--teal);cursor:pointer;font:inherit;text-decoration:underline;padding:0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SkillLoop</h1>
+  <p class="sub">Find the right people inside your community.</p>
+  <div class="note">Prototype demo. Intent extraction here is a rule-based stand-in for the on-device LLM, and members and messages are sample data. Nothing leaves your browser.</div>
+
+  <div class="tabs">
+    <button class="tab on" id="t1">Find people</button>
+    <button class="tab" id="t2">What did I miss?</button>
+  </div>
+
+  <section id="p1">
+    <div class="card">
+      <textarea id="req" placeholder="e.g. I need someone good at Python and ML for a healthcare hackathon"></textarea>
+      <div class="row"><button class="btn" id="go">Understand and match</button></div>
+      <div class="try">Try: <button data-q="I need someone good at Python and ML for a healthcare hackathon">ML + healthcare</button><button data-q="Urgent: looking for an experienced React developer for a hackathon tonight">React, urgent</button><button data-q="Beginner friendly Flutter mentor needed for a study group">Flutter mentor</button></div>
+    </div>
+    <div id="out" class="hide">
+      <div class="card">
+        <div class="lab">AI understood</div>
+        <div class="row" id="chips" style="margin-top:0"></div>
+      </div>
+      <div class="card">
+        <div class="lab" style="margin-top:0">Best matches (sample members)</div>
+        <div id="matches"></div>
+        <div class="row"><button class="btn alt" id="room">Create collaboration room</button></div>
+      </div>
+      <div class="card hide" id="roomcard">
+        <div class="lab" style="margin-top:0">Collaboration room created</div>
+        <div id="roominfo"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="p2" class="hide">
+    <div class="card">
+      <div class="lab" style="margin-top:0">Community: Campus Builders (42 unread)</div>
+      <div id="msgs"></div>
+      <div class="row"><button class="btn" id="dig">What did I miss?</button></div>
+    </div>
+    <div class="card hide" id="digest">
+      <div class="lab" style="margin-top:0">Today in your community</div>
+      <ul id="dl"></ul>
+    </div>
+  </section>
+</div>
+
+<script>
+var MEMBERS=[
+ {n:"Arun",s:["python","ml"],lv:"experienced"},
+ {n:"Priya",s:["ml","healthcare","python"],lv:"intermediate"},
+ {n:"Karthik",s:["python","django"],lv:"intermediate"},
+ {n:"Divya",s:["react","javascript","ui"],lv:"experienced"},
+ {n:"Sana",s:["react","node","python"],lv:"intermediate"},
+ {n:"Rahul",s:["flutter","dart","android"],lv:"experienced"},
+ {n:"Meena",s:["kotlin","android","flutter"],lv:"beginner"}
+];
+var SKILLS={python:["python"],ml:["ml","machine learning","ai"],healthcare:["healthcare","health","medical"],react:["react"],javascript:["javascript","js"],node:["node"],flutter:["flutter"],android:["android"],kotlin:["kotlin"],ui:["ui","design"],django:["django"]};
+var MSGS=[
+ "Arun: Anyone free for a hackathon team this weekend? Need 2 people.",
+ "Priya: Sharing an internship link at a health-tech startup.",
+ "Karthik: Python study group at 6 PM, join if interested.",
+ "Sana: How do I deploy a Node app on a free tier?",
+ "Rahul: Project looking for an ML contributor, DM me.",
+ "Divya: Another internship opening posted in the pinned doc.",
+ "Meena: Can someone explain Kotlin coroutines?",
+ "Arun: Still need one more teammate for the hackathon."
+];
+function $(i){return document.getElementById(i)}
+function parse(t){
+  var l=" "+t.toLowerCase()+" ",sk=[],k,i;
+  for(k in SKILLS){for(i=0;i<SKILLS[k].length;i++){if(new RegExp("[^a-z]"+SKILLS[k][i]+"[^a-z]").test(l)){sk.push(k);break}}}
+  var intent=/hackathon|team/.test(l)?"Find hackathon teammate":/mentor|learn|study/.test(l)?"Find mentor / study partner":/help|need|looking/.test(l)?"Find collaborator":"Explore community";
+  var urg=/urgent|asap|tonight|today|now/.test(l)?"High":"Normal";
+  var lv=/beginner/.test(l)?"beginner":/experienced|senior|expert/.test(l)?"experienced":"any";
+  return {skills:sk,intent:intent,urgency:urg,level:lv};
+}
+function score(m,q){
+  if(!q.skills.length)return 0;
+  var hit=0,i;for(i=0;i<q.skills.length;i++){if(m.s.indexOf(q.skills[i])>-1)hit++}
+  if(!hit)return 0;var sc=hit/q.skills.length*85;
+  if(q.level!=="any"&&m.lv===q.level)sc+=10;else if(q.level==="any"&&hit)sc+=5;
+  return Math.min(99,Math.round(sc));
+}
+var last=null,best=[];
+function run(){
+  var t=$("req").value.trim();if(!t)return;
+  var q=parse(t);last=q;
+  var c=$("chips");c.innerHTML="";
+  function chip(x,a){var e=document.createElement("span");e.className="chip"+(a?" a":"");e.textContent=x;c.appendChild(e)}
+  q.skills.forEach(function(s){chip(s)});
+  if(!q.skills.length)chip("no skills detected",1);
+  chip("Intent: "+q.intent,1);chip("Urgency: "+q.urgency,1);chip("Level: "+q.level,1);
+  best=MEMBERS.map(function(m){return {m:m,sc:score(m,q)}}).filter(function(x){return x.sc>0}).sort(function(a,b){return b.sc-a.sc}).slice(0,3);
+  var h="";
+  best.forEach(function(x){h+='<div class="m"><div class="av">'+x.m.n[0]+'</div><div class="mi"><b>'+x.m.n+'</b><span>'+x.m.s.join(" + ")+' ('+x.m.lv+')</span><div class="bar"><i style="width:'+x.sc+'%"></i></div></div><div class="pct">'+x.sc+'%</div></div>'});
+  $("matches").innerHTML=h||'<div class="try">No matches yet. Try mentioning a skill like Python, React or Flutter.</div>';
+  $("out").classList.remove("hide");$("roomcard").classList.add("hide");
+}
+$("go").onclick=run;
+document.querySelectorAll("[data-q]").forEach(function(b){b.onclick=function(){$("req").value=b.getAttribute("data-q");run()}});
+$("room").onclick=function(){
+  if(!best.length)return;
+  $("roominfo").innerHTML='<b>Room: '+(last.skills.slice(0,2).join(" + ")||"project")+' team</b><div class="row">'+best.map(function(x){return '<span class="chip">'+x.m.n+' invited</span>'}).join("")+'</div><p class="try">Temporary room. Auto-archives when the project ends.</p>';
+  $("roomcard").classList.remove("hide");
+};
+function tab(n){
+  $("p1").classList.toggle("hide",n!==1);$("p2").classList.toggle("hide",n!==2);
+  $("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2);
+}
+$("t1").onclick=function(){tab(1)};$("t2").onclick=function(){tab(2)};
+$("msgs").innerHTML=MSGS.map(function(m){return '<div class="msg">'+m+'</div>'}).join("");
+$("dig").onclick=function(){
+  var team=MSGS.filter(function(m){return /hackathon/i.test(m)}).length;
+  var intern=MSGS.filter(function(m){return /internship/i.test(m)}).length;
+  var q=MSGS.filter(function(m){return /\?/.test(m)}).length;
+  var items=[team+" mentions of members looking for hackathon teammates",intern+" internship opportunities shared","Python study group at 6 PM",q+" unanswered questions","1 project looking for an ML contributor"];
+  $("dl").innerHTML=items.map(function(i){return "<li>"+i+"</li>"}).join("");
+  $("digest").classList.remove("hide");
+};
+</script>
+</body>
+</html>
